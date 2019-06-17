@@ -1,0 +1,41 @@
+cors:
+  allowOrigins:
+    - "http://admin-dev.test.com"
+    - "http://admin-test.test.com"
+    - "http://admin.test.com"
+    - "http://admin-shop.test.com"
+
+safeHosts:
+  - "admin-dev.test.com"
+  - "admin-test.test.com"
+  - "admin.test.com"
+
+context:
+  timeoutMilliseconds: 3000
+
+services:
+  goodsService:
+    address: "127.0.0.1:50001"
+    client:
+      init: 5
+      capacity: 20
+      idleTimeoutSeconds: 300
+      maxSeconds: 3600
+  shopService:
+    address: "127.0.0.1:50011"
+    client:
+      init: 5
+      capacity: 20
+      idleTimeoutSeconds: 300
+      maxSeconds: 3600
+
+cache:
+  memory:
+    defaultExpirationSeconds: 3600
+    cleanupIntervalSeconds: 1800
+
+upgrade:
+  auto: true
+  weekly: false
+  times: -1
+  float64: 1111111111111111111111
