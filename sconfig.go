@@ -2,7 +2,7 @@ package sconfig
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
@@ -12,40 +12,41 @@ import (
 // SConfig read config interface
 type SConfig interface {
 	LoadConfig(configFile string) error
-	Get(key string) (interface{}, bool)
+	Get(key string) (any, bool)
 	GetString(key string) (string, bool)
 	GetBool(key string) (bool, bool)
 	GetInt(key string) (int, bool)
+	GetUint(key string) (uint, bool)
 	GetFloat64(key string) (float64, bool)
 	GetStringSlice(key string) ([]string, bool)
-	AllSettings() map[interface{}]interface{}
-	UnmarshalKey(key string, rawVal interface{}) error
+	AllSettings() map[any]any
+	UnmarshalKey(key string, rawVal any) error
 }
 
 // config read config struct
 type config struct {
-	Data map[interface{}]interface{}
+	Data map[any]any
 }
 
 // LoadConfig load config file, call it once before call other method.
 func (c *config) LoadConfig(configFile string) error {
-	content, err := ioutil.ReadFile(configFile)
+	content, err := os.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
-	config := make(map[interface{}]interface{})
-	if err := yaml.Unmarshal(content, config); err != nil {
+	configData := make(map[any]any)
+	if err := yaml.Unmarshal(content, configData); err != nil {
 		return err
 	}
-	c.Data = config
+	c.Data = configData
 	return nil
 }
 
-func (c *config) find(cfg interface{}, key string) (interface{}, bool) {
+func (c *config) find(cfg any, key string) (any, bool) {
 	parts := strings.Split(key, ".")
 	for _, item := range parts {
 		switch c := cfg.(type) {
-		case map[interface{}]interface{}:
+		case map[any]any:
 			if value, ok := c[item]; ok {
 				cfg = value
 			} else {
@@ -59,7 +60,7 @@ func (c *config) find(cfg interface{}, key string) (interface{}, bool) {
 }
 
 // Get get config by key.
-func (c *config) Get(key string) (interface{}, bool) {
+func (c *config) Get(key string) (any, bool) {
 	if c.Data == nil {
 		return nil, false
 	}
@@ -99,6 +100,16 @@ func (c *config) GetInt(key string) (int, bool) {
 	return result, ok
 }
 
+// GetUint get uint by key
+func (c *config) GetUint(key string) (uint, bool) {
+	data, ok := c.Get(key)
+	if !ok {
+		return 0, false
+	}
+	result, ok := data.(uint)
+	return result, ok
+}
+
 // GetFloat64 get float64 by key
 func (c *config) GetFloat64(key string) (float64, bool) {
 	data, ok := c.Get(key)
@@ -115,7 +126,7 @@ func (c *config) GetStringSlice(key string) ([]string, bool) {
 	if !ok {
 		return nil, false
 	}
-	list, ok := data.([]interface{})
+	list, ok := data.([]any)
 	if !ok {
 		return nil, false
 	}
@@ -130,12 +141,12 @@ func (c *config) GetStringSlice(key string) ([]string, bool) {
 }
 
 // AllSettings get all settings by key
-func (c *config) AllSettings() map[interface{}]interface{} {
+func (c *config) AllSettings() map[any]any {
 	return c.Data
 }
 
 // UnmarshalKey get special type config item by key
-func (c *config) UnmarshalKey(key string, rawVal interface{}) error {
+func (c *config) UnmarshalKey(key string, rawVal any) error {
 	data, ok := c.Get(key)
 	if !ok {
 		return fmt.Errorf("key: %s not exist", key)
