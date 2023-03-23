@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // SConfig read config interface
@@ -19,13 +19,13 @@ type SConfig interface {
 	GetUint(key string) (uint, bool)
 	GetFloat64(key string) (float64, bool)
 	GetStringSlice(key string) ([]string, bool)
-	AllSettings() map[any]any
+	AllSettings() map[string]any
 	UnmarshalKey(key string, rawVal any) error
 }
 
 // config read config struct
 type config struct {
-	Data map[any]any
+	Data map[string]any
 }
 
 // LoadConfig load config file, call it once before call other method.
@@ -34,7 +34,7 @@ func (c *config) LoadConfig(configFile string) error {
 	if err != nil {
 		return err
 	}
-	configData := make(map[any]any)
+	configData := make(map[string]any)
 	if err := yaml.Unmarshal(content, configData); err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (c *config) find(cfg any, key string) (any, bool) {
 	parts := strings.Split(key, ".")
 	for _, item := range parts {
 		switch c := cfg.(type) {
-		case map[any]any:
+		case map[string]any:
 			if value, ok := c[item]; ok {
 				cfg = value
 			} else {
@@ -141,7 +141,7 @@ func (c *config) GetStringSlice(key string) ([]string, bool) {
 }
 
 // AllSettings get all settings by key
-func (c *config) AllSettings() map[any]any {
+func (c *config) AllSettings() map[string]any {
 	return c.Data
 }
 
